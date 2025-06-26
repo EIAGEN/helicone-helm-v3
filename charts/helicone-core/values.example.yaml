@@ -147,6 +147,9 @@ helicone:
                 targets:
                   - openai
                   - anthropic
+      helicone:
+        authentication: true
+        observability: false
 
     # API Keys (these should be set via secure secrets management)
     secrets:
