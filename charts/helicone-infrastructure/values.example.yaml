@@ -73,6 +73,38 @@ otelCollector:
         servicePort: 8888
         protocol: TCP
   
+  # Ingress configuration for OTEL endpoints
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+      nginx.ingress.kubernetes.io/proxy-body-size: "50m"  # Increased for larger log payloads
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+      nginx.ingress.kubernetes.io/client-body-timeout: "300"
+      # Uncomment below for rate limiting if needed
+      # nginx.ingress.kubernetes.io/rate-limit: "100"
+      # nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    hosts:
+      - host: otel.helicone.ai
+        paths:
+          - path: /v1/logs
+            pathType: Prefix
+            port: 4318
+          - path: /v1/traces
+            pathType: Prefix
+            port: 4318
+          - path: /v1/metrics
+            pathType: Prefix
+            port: 4318
+    tls: []
+    # Uncomment and configure TLS for production:
+    # tls:
+    #   - secretName: otel-logs-tls
+    #     hosts:
+    #       - otel-logs.yourdomain.com
+  
   # Configuration for the OTEL Collector
   config:
     receivers:
@@ -264,7 +296,7 @@ monitoring:
 # Nginx Ingress Controller configuration
 nginxIngressController:
   enabled: true
-  namespace: infrastructure
+  namespace: infrastructure  # Deploy in infrastructure namespace
   
   # Watch all namespaces for ingress resources
   watchIngressWithoutClass: true
