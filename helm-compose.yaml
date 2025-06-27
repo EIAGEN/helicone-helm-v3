@@ -13,6 +13,13 @@ releases:
     createNamespace: true
     valueFiles:
       - ./charts/helicone-core/values.yaml
+  helicone-infrastructure:
+    chart: ./charts/helicone-infrastructure
+    chartVersion: 0.1.0
+    namespace: infrastructure
+    createNamespace: true
+    valueFiles:
+      - ./charts/helicone-infrastructure/values.yaml
   # helicone-ai-gateway:
   #   chart: ./charts/helicone-ai-gateway
   #   chartVersion: 0.1.0
@@ -20,13 +27,6 @@ releases:
   #   createNamespace: true
   #   valueFiles:
   #     - ./charts/helicone-ai-gateway/values.yaml
-  # helicone-infrastructure:
-  #   chart: ./charts/helicone-infrastructure
-  #   chartVersion: 0.1.0
-  #   namespace: default
-  #   createNamespace: true
-  #   valueFiles:
-  #     - ./charts/helicone-infrastructure/values.yaml
   # helicone-monitoring:
   #   chart: ./charts/helicone-monitoring
   #   chartVersion: 0.1.0
