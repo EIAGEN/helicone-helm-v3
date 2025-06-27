@@ -1,0 +1,40 @@
+{{- if .Values.monitoring.grafana.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: helicone-monitoring-application-dashboard
+  namespace: {{ include "helicone-monitoring.namespace" . }}
+  labels:
+    {{- include "helicone-monitoring.labels" . | nindent 4 }}
+    grafana_dashboard: "1"
+data:
+  helicone-application-dashboard.json: |
+{{ .Files.Get "dashboards/helicone-application-dashboard.yaml" | indent 4 }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: helicone-monitoring-logs-dashboard
+  namespace: {{ include "helicone-monitoring.namespace" . }}
+  labels:
+    {{- include "helicone-monitoring.labels" . | nindent 4 }}
+    grafana_dashboard: "1"
+data:
+  helicone-logs-dashboard.json: |
+{{ .Files.Get "dashboards/helicone-logs-dashboard.yaml" | indent 4 }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: helicone-monitoring-beyla-http-dashboard
+  namespace: {{ include "helicone-monitoring.namespace" . }}
+  labels:
+    {{- include "helicone-monitoring.labels" . | nindent 4 }}
+    grafana_dashboard: "1"
+data:
+  beyla-http-dashboard.json: |
+{{ .Files.Get "dashboards/beyla-http-dashboard.yaml" | indent 4 }}
+{{- end }} 
