@@ -6,7 +6,7 @@ storage:
   path: .hcstate # default
 
 releases:
-  helicone-core:
+  helicone-core: # Note: Uses ai-gateway chart by default, so you don't need to install ai-gateway separately
     chart: ./charts/helicone-core
     chartVersion: 0.1.0
     namespace: default
