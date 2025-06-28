@@ -6,40 +6,40 @@ storage:
   path: .hcstate # default
 
 releases:
-  helicone-core: # Note: Uses ai-gateway chart by default, so you don't need to install ai-gateway separately
+  helicone-core:
     chart: ./charts/helicone-core
     chartVersion: 0.1.0
-    namespace: default
+    namespace: helicone
     createNamespace: true
     valueFiles:
       - ./charts/helicone-core/values.yaml
   helicone-infrastructure:
     chart: ./charts/helicone-infrastructure
     chartVersion: 0.1.0
-    namespace: infrastructure
+    namespace: helicone-infrastructure
     createNamespace: true
     valueFiles:
       - ./charts/helicone-infrastructure/values.yaml
   helicone-monitoring:
     chart: ./charts/helicone-monitoring
     chartVersion: 0.1.0
-    namespace: monitoring
+    namespace: helicone-monitoring
     createNamespace: true
     valueFiles:
       - ./charts/helicone-monitoring/values.yaml
+  helicone-argocd:
+    chart: ./charts/helicone-argocd
+    chartVersion: 0.1.0
+    namespace: helicone-argocd
+    createNamespace: true
+    valueFiles:
+      - ./charts/helicone-argocd/values.yaml
   # helicone-ai-gateway:
   #   chart: ./charts/helicone-ai-gateway
   #   chartVersion: 0.1.0
-  #   namespace: default
+  #   namespace: helicone-ai-gateway
   #   createNamespace: true
   #   valueFiles:
   #     - ./charts/helicone-ai-gateway/values.yaml
-  # helicone-argocd:
-  #   chart: ./charts/helicone-argocd
-  #   chartVersion: 0.1.0
-  #   namespace: argocd
-  #   createNamespace: true
-  #   valueFiles:
-  #     - ./charts/helicone-argocd/values.yaml
 repositories:
   bitnami: https://charts.bitnami.com/bitnami

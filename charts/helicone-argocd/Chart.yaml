@@ -9,7 +9,7 @@ dependencies:
   - name: argo-cd
     version: "7.3.11"
     repository: "https://argoproj.github.io/argo-helm"
-    condition: argocd.enabled
+    condition: argo-cd.enabled
 
 keywords:
   - helicone
@@ -23,4 +23,4 @@ maintainers:
 
 home: https://helicone.ai
 sources:
-  - https://github.com/Helicone/helicone 
+  - https://github.com/Helicone/helicone
