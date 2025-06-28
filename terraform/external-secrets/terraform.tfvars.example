@@ -1,0 +1,56 @@
+#################################################################################
+# External Secrets Operator Configuration
+#################################################################################
+
+# Required: Copy values from your EKS module outputs
+cluster_name      = "helicone"
+oidc_provider_arn = "arn:aws:iam::123456789012:oidc-provider/oidc.eks.us-west-2.amazonaws.com/id/EXAMPLED539D4633E53DE1B716D3041E"
+
+# AWS Configuration
+region        = "us-west-2"
+secret_prefix = "helicone"
+
+# Kubernetes Configuration
+external_secrets_namespace      = "external-secrets-system"
+external_secrets_service_account = "external-secrets"
+
+# KMS Configuration
+create_kms_key             = true
+kms_key_deletion_window    = 30
+
+# Resource Tagging
+tags = {
+  Environment = "production"
+  Project     = "helicone"
+  ManagedBy   = "terraform"
+  Component   = "external-secrets"
+}
+
+#################################################################################
+# Secret Values (DO NOT COMMIT THESE VALUES)
+# These are initial values - you can update them later via AWS CLI or console
+#################################################################################
+
+# Database Credentials
+database_username = "postgres"
+database_password = "your-super-secret-postgres-password"
+
+# API Keys
+openai_api_key    = "sk-your-openai-api-key"
+anthropic_api_key = "sk-ant-your-anthropic-api-key"
+gemini_api_key    = "your-gemini-api-key"
+helicone_api_key  = "your-helicone-api-key"
+
+# Storage Credentials
+s3_access_key       = "your-s3-access-key"
+s3_secret_key       = "your-s3-secret-key"
+minio_root_user     = "minio"
+minio_root_password = "your-minio-password"
+
+# Authentication Secrets
+better_auth_secret = "your-better-auth-secret-32-chars-long"
+stripe_secret_key  = "sk_live_your-stripe-secret-key"
+
+# ClickHouse Credentials
+clickhouse_user     = "default"
+clickhouse_password = "your-clickhouse-password" 
