@@ -7,6 +7,21 @@
 {{- end }}
 {{- end }}
 
+{{/*
+AI Gateway specific naming
+*/}}
+{{- define "helicone.ai-gateway.name" -}}
+{{ include "helicone.name" . }}-ai-gateway
+{{- end }}
+
+{{/*
+AI Gateway selector labels
+*/}}
+{{- define "helicone.ai-gateway.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "helicone.ai-gateway.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
 # TODO Place the correct environment variables in the correct location. This requires refactoring the other charts as well.
 # - Move to other helpers.tpl files and refactor accordingly.
 
@@ -193,6 +208,10 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 
 {{- define "redis.name" -}}
 {{ include "helicone.name" . }}-redis
+{{- end }}
+
+{{- define "minio.name" -}}
+{{ include "helicone.name" . }}-minio
 {{- end }}
 
 {{- define "helicone.env.betterAuthSecret" -}}
