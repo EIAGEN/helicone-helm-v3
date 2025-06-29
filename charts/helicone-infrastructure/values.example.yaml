@@ -4,14 +4,39 @@
 #
 ################################################################################
 
+# Sealed Secrets Controller configuration
+sealedSecrets:
+  enabled: true
+  fullnameOverride: "sealed-secrets-controller"
+  namespace: "kube-system"
+  image:
+    tag: "v0.26.0"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  # Key rotation settings (30 days default)
+  keyRenewPeriod: "720h"
+
+# External Secrets Operator configuration
+externalSecrets:
+  enabled: false # Set to true to enable AWS Secrets Manager integration
+  serviceAccount:
+    # IAM role ARN for IRSA (required for AWS Secrets Manager access)
+    # Example: arn:aws:iam::123456789012:role/helicone-external-secrets-role
+    roleArn: ""
+
 # Cluster Autoscaler configuration
 clusterAutoscaler:
   enabled: true
   image:
-    tag: "v1.26.2"  # Should match your Kubernetes version
-  clusterName: "helicone-cluster"  # Replace with your actual cluster name
+    tag: "v1.26.2" # Should match your Kubernetes version
+  clusterName: "helicone-cluster" # Replace with your actual cluster name
   serviceAccount:
-    roleArn: ""  # ARN of the IAM role for cluster autoscaler (must be set for production)
+    roleArn: "" # ARN of the IAM role for cluster autoscaler (must be set for production)
   extraArgs:
     - "--scale-down-delay-after-add=10m"
     - "--scale-down-unneeded-time=10m"
@@ -25,10 +50,10 @@ otelCollector:
     repository: otel/opentelemetry-collector-contrib
     tag: "0.91.0"
     pullPolicy: IfNotPresent
-  
+
   # Deployment mode: deployment, daemonset, or statefulset
   mode: deployment
-  
+
   # Resource configuration
   resources:
     requests:
@@ -37,7 +62,7 @@ otelCollector:
     limits:
       cpu: 1000m
       memory: 2Gi
-  
+
   # Service configuration
   service:
     type: ClusterIP
@@ -72,14 +97,14 @@ otelCollector:
         containerPort: 8888
         servicePort: 8888
         protocol: TCP
-  
+
   # Ingress configuration for OTEL endpoints
   ingress:
     enabled: true
     className: "nginx"
     annotations:
       nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-      nginx.ingress.kubernetes.io/proxy-body-size: "50m"  # Increased for larger log payloads
+      nginx.ingress.kubernetes.io/proxy-body-size: "50m" # Increased for larger log payloads
       nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
       nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
       nginx.ingress.kubernetes.io/client-body-timeout: "300"
@@ -104,7 +129,7 @@ otelCollector:
     #   - secretName: otel-logs-tls
     #     hosts:
     #       - otel-logs.yourdomain.com
-  
+
   # Configuration for the OTEL Collector
   config:
     receivers:
@@ -125,11 +150,11 @@ otelCollector:
       prometheus:
         config:
           scrape_configs:
-            - job_name: 'otel-collector'
+            - job_name: "otel-collector"
               scrape_interval: 10s
               static_configs:
-                - targets: ['0.0.0.0:8888']
-    
+                - targets: ["0.0.0.0:8888"]
+
     processors:
       batch:
         timeout: 1s
@@ -145,24 +170,24 @@ otelCollector:
           - key: service.namespace
             from_attribute: service.namespace
             action: upsert
-    
+
     exporters:
       # OTLP exporter to Jaeger
       otlp/jaeger:
         endpoint: "jaeger-collector:4317"
         tls:
           insecure: true
-      
+
       # Prometheus exporter
       prometheus:
         endpoint: "0.0.0.0:8889"
         const_labels:
           label1: value1
-      
+
       # Logging exporter for debugging
       logging:
         loglevel: debug
-    
+
     service:
       pipelines:
         traces:
@@ -185,7 +210,7 @@ jaeger:
     repository: jaegertracing/all-in-one
     tag: "1.53"
     pullPolicy: IfNotPresent
-  
+
   # Resource configuration
   resources:
     requests:
@@ -194,7 +219,7 @@ jaeger:
     limits:
       cpu: 500m
       memory: 1Gi
-  
+
   # Service configuration
   service:
     type: ClusterIP
@@ -211,13 +236,13 @@ jaeger:
       jaeger-metrics:
         port: 14269
         targetPort: 14269
-  
+
   # Environment variables
   env:
     COLLECTOR_OTLP_ENABLED: "true"
     COLLECTOR_ZIPKIN_HOST_PORT: ":9411"
     MEMORY_MAX_TRACES: "50000"
-  
+
   # Ingress configuration for Jaeger UI
   ingress:
     enabled: false
@@ -237,7 +262,7 @@ beyla:
     repository: grafana/beyla
     tag: "v1.4.0"
     pullPolicy: IfNotPresent
-  
+
   # Configuration for Beyla
   config:
     logLevel: info
@@ -255,22 +280,22 @@ beyla:
     metrics:
       interval: "30s"
       buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
-  
+
   # Security context for Beyla
   securityContext:
     privileged: false
     capabilities:
       sysAdmin: false
-  
+
   # OpenTelemetry configuration
   otel:
     endpoint: "http://helicone-infrastructure-otel-collector:4317"
     headers: ""
     protocol: "grpc"
-  
+
   # Additional environment variables for Beyla
   extraEnvVars: {}
-  
+
   # Resource limits for Beyla sidecar
   resources:
     requests:
@@ -289,32 +314,32 @@ serviceAccount:
 monitoring:
   namespaceOverride: "monitoring"
   serviceMonitor:
-    enabled: true  # Now enabled since Prometheus Operator is installed
+    enabled: true # Now enabled since Prometheus Operator is installed
     interval: 15s
     scrapeTimeout: 10s
 
 # Nginx Ingress Controller configuration
 nginxIngressController:
   enabled: true
-  namespace: infrastructure  # Deploy in infrastructure namespace
-  
+  namespace: infrastructure # Deploy in infrastructure namespace
+
   # Watch all namespaces for ingress resources
   watchIngressWithoutClass: true
-  watchNamespaces: ""  # Empty string means watch all namespaces
-  
+  watchNamespaces: "" # Empty string means watch all namespaces
+
   # Controller configuration
   controller:
     image:
       repository: registry.k8s.io/ingress-nginx/controller
       tag: "v1.8.2"
       pullPolicy: IfNotPresent
-    
+
     # Enable cross-namespace ingress support
     extraArgs:
       - "--watch-ingress-without-class=true"
       - "--ingress-class=nginx"
       - "--enable-ssl-passthrough"
-    
+
     # Resource configuration
     resources:
       requests:
@@ -323,7 +348,7 @@ nginxIngressController:
       limits:
         cpu: 500m
         memory: 512Mi
-    
+
     # Service configuration
     service:
       type: LoadBalancer
@@ -333,20 +358,20 @@ nginxIngressController:
       ports:
         http: 80
         https: 443
-    
+
     # Ingress class configuration
     ingressClass:
       name: nginx
       enabled: true
       default: true
       controllerValue: "k8s.io/ingress-nginx"
-    
+
     # RBAC configuration for cross-namespace access
     rbac:
       create: true
-      scope: true  # Cluster-wide scope for all namespaces
-    
+      scope: true # Cluster-wide scope for all namespaces
+
     # Service account
     serviceAccount:
       create: true
-      name: nginx-ingress-controller 
+      name: nginx-ingress-controller

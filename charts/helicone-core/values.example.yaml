@@ -87,7 +87,7 @@ helicone:
         pullPolicy: IfNotPresent
         tag: "v2025-06-17"
       resources: {}
-    
+
     router:
       enabled: true
 
@@ -142,28 +142,18 @@ helicone:
       routers:
         default:
           load-balance:
-              chat:
-                strategy: latency
-                targets:
-                  - openai
-                  - anthropic
+            chat:
+              strategy: latency
+              targets:
+                - openai
+                - anthropic
       helicone:
         authentication: true
         observability: false
 
-    # API Keys (these should be set via secure secrets management)
-    secrets:
-      # Set these values using kubectl create secret or your preferred secrets management
-      # kubectl create secret generic helicone-ai-gateway-secrets \
-      #   --from-literal=proxy_helicone_api_key="your-key-here" \
-      #   --from-literal=openai_api_key="your-key-here" \
-      #   --from-literal=anthropic_api_key="your-key-here" \
-      #   --from-literal=gemini_api_key="your-key-here" \
-      #   --from-literal=helicone_api_key="your-key-here"
-      aiGatewayOpenaiApiKey: ""
-      aiGatewayAnthropicApiKey: ""
-      aiGatewayGeminiApiKey: ""
-      aiGatewayHeliconeApiKey: ""
+    # NOTE: API Keys are managed via SealedSecrets
+    # Use scripts/generate-sealed-secrets.sh to create encrypted secrets
+    # The secrets will be automatically available to the AI Gateway
 
   clickhouse:
     enabled: true
@@ -310,43 +300,51 @@ helicone:
     googleProjectNumber: "GOOGLE_PROJECT_NUMBER"
     nodeEnv: "development"
 
-  # TODO Disaggregate and move to a secrets manager such that it is never a part of the helm chart
-  secrets:
-    # IMPORTANT: These are default development secrets
-    # For production, override these values or use external secret management
-    
-    # Authentication & Auth secrets
-    betterAuthSecret: ""
-    
-    # Payment processing
-    stripeSecretKey: ""
-    
-    # Storage (S3/MinIO)
-    minioRootUser: ""
-    minioRootPassword: ""
-    s3AccessKey: ""
-    s3SecretKey: ""
-    
-    # Database secrets
-    postgresPassword: "" 
-    
-    # ClickHouse secrets
-    clickhouseUser: "default"
-    clickhousePassword: ""
-    
-    # External API keys (development defaults)
-    azureApiKey: ""
-    azureApiVersion: ""
-    azureDeploymentName: ""
-    azureBaseUrl: ""
-    openaiApiKey: ""
-    
-    # Monitoring & observability
-    grafanaAdminPassword: "admin"
-    
-    # Feature flags and configuration
-    enablePromptSecurity: "false"
-    enableCronJob: "true"
+#################################################################################
+# Sealed Secrets Configuration
+#################################################################################
+
+# Secrets are now managed via Bitnami Sealed Secrets for GitOps-friendly secret management.
+#
+# To generate encrypted secrets:
+#   1. Install kubeseal CLI: https://github.com/bitnami-labs/sealed-secrets
+#   2. Run: ./scripts/generate-sealed-secrets.sh [environment] [namespace]
+#   3. Commit the encrypted secrets to Git (they are safe to store)
+#
+# The SealedSecret resources will automatically create the required Kubernetes Secrets
+# that the application components reference.
+
+#################################################################################
+# External Secrets Configuration (Optional AWS Integration)
+#################################################################################
+
+# Advanced: External Secrets Operator integration with AWS Secrets Manager
+# This allows automatic syncing from AWS Secrets Manager to SealedSecrets via CI/CD
+externalSecrets:
+  # Enable External Secrets Operator integration
+  # When enabled, secrets will be synchronized from AWS Secrets Manager
+  # When disabled, you'll manage SealedSecrets manually
+  enabled: false
+
+  # AWS configuration
+  aws:
+    region: "us-west-2"
+
+  # Secret prefix in AWS Secrets Manager
+  # Secrets will be named: {secretPrefix}/database, {secretPrefix}/storage, etc.
+  secretPrefix: "helicone"
+
+  # How often to refresh secrets from AWS Secrets Manager
+  refreshInterval: "1h"
+
+  # Service account configuration for External Secrets Operator
+  # This service account should be annotated with the IAM role ARN
+  # created by the external-secrets Terraform module
+  serviceAccount:
+    name: "external-secrets"
+    # Example annotation (set this to your actual IAM role ARN):
+    # annotations:
+    #   eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/helicone-external-secrets-role"
 
 mailhog:
   enabled: true
@@ -364,4 +362,4 @@ mailhog:
 
 # Beyla configuration (disabled in core, managed by infrastructure chart)
 beyla:
-  enabled: false 
+  enabled: false
