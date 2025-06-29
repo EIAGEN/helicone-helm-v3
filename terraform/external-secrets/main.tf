@@ -1,114 +1,102 @@
-provider "aws" {
-  region = var.region
-}
-
-# Data source to get EKS cluster information
-data "aws_eks_cluster" "cluster" {
-  name = var.cluster_name
-}
-
-# Data source to get OIDC provider details
-data "aws_iam_openid_connect_provider" "eks" {
-  arn = var.oidc_provider_arn
-}
+# Data sources
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 locals {
-  common_tags = merge(var.tags, {
-    Component = "external-secrets"
-  })
+  account_id = data.aws_caller_identity.current.account_id
+  partition  = data.aws_partition.current.partition
 }
 
 #################################################################################
 # AWS Secrets Manager Secrets
 #################################################################################
 
-# Database credentials secret
+# Database secrets
 resource "aws_secretsmanager_secret" "database" {
-  name        = "${var.secret_prefix}/database"
-  description = "Helicone database credentials"
-  
-  tags = merge(local.common_tags, {
-    Category = "database"
-  })
+  name                    = "${var.secret_prefix}/database"
+  description             = "Helicone database credentials"
+  recovery_window_in_days = var.recovery_window_days
+
+  tags = var.tags
 }
 
 resource "aws_secretsmanager_secret_version" "database" {
   secret_id = aws_secretsmanager_secret.database.id
   secret_string = jsonencode({
-    username = var.database_username
-    password = var.database_password
+    postgres-password = var.database_secrets.postgres_password
   })
-  
+
   lifecycle {
     ignore_changes = [secret_string]
   }
 }
 
-# API Keys secret
-resource "aws_secretsmanager_secret" "api_keys" {
-  name        = "${var.secret_prefix}/api-keys"
-  description = "External API keys for LLM providers"
-  
-  tags = merge(local.common_tags, {
-    Category = "api-keys"
-  })
-}
-
-resource "aws_secretsmanager_secret_version" "api_keys" {
-  secret_id = aws_secretsmanager_secret.api_keys.id
-  secret_string = jsonencode({
-    openai_api_key     = var.openai_api_key
-    anthropic_api_key  = var.anthropic_api_key
-    gemini_api_key     = var.gemini_api_key
-    helicone_api_key   = var.helicone_api_key
-  })
-  
-  lifecycle {
-    ignore_changes = [secret_string]
-  }
-}
-
-# Storage credentials secret
+# Storage secrets (S3/MinIO)
 resource "aws_secretsmanager_secret" "storage" {
-  name        = "${var.secret_prefix}/storage"
-  description = "S3/MinIO storage credentials"
-  
-  tags = merge(local.common_tags, {
-    Category = "storage"
-  })
+  name                    = "${var.secret_prefix}/storage"
+  description             = "Helicone storage credentials (S3/MinIO)"
+  recovery_window_in_days = var.recovery_window_days
+
+  tags = var.tags
 }
 
 resource "aws_secretsmanager_secret_version" "storage" {
   secret_id = aws_secretsmanager_secret.storage.id
   secret_string = jsonencode({
-    s3_access_key       = var.s3_access_key
-    s3_secret_key       = var.s3_secret_key
-    minio_root_user     = var.minio_root_user
-    minio_root_password = var.minio_root_password
+    access_key          = var.storage_secrets.access_key
+    secret_key          = var.storage_secrets.secret_key
+    minio-root-user     = var.storage_secrets.minio_root_user
+    minio-root-password = var.storage_secrets.minio_root_password
   })
-  
+
   lifecycle {
     ignore_changes = [secret_string]
   }
 }
 
-# Authentication secrets
-resource "aws_secretsmanager_secret" "auth" {
-  name        = "${var.secret_prefix}/auth"
-  description = "Authentication and authorization secrets"
-  
-  tags = merge(local.common_tags, {
-    Category = "auth"
-  })
+# Web application secrets
+resource "aws_secretsmanager_secret" "web" {
+  name                    = "${var.secret_prefix}/web"
+  description             = "Helicone web application secrets"
+  recovery_window_in_days = var.recovery_window_days
+
+  tags = var.tags
 }
 
-resource "aws_secretsmanager_secret_version" "auth" {
-  secret_id = aws_secretsmanager_secret.auth.id
+resource "aws_secretsmanager_secret_version" "web" {
+  secret_id = aws_secretsmanager_secret.web.id
   secret_string = jsonencode({
-    better_auth_secret = var.better_auth_secret
-    stripe_secret_key  = var.stripe_secret_key
+    BETTER_AUTH_SECRET = var.web_secrets.better_auth_secret
+    STRIPE_SECRET_KEY  = var.web_secrets.stripe_secret_key
   })
-  
+
+  lifecycle {
+    ignore_changes = [secret_string]
+  }
+}
+
+# AI Gateway API keys
+resource "aws_secretsmanager_secret" "ai_gateway" {
+  count = var.create_ai_gateway_secrets ? 1 : 0
+
+  name                    = "${var.secret_prefix}/ai-gateway"
+  description             = "Helicone AI Gateway API keys"
+  recovery_window_in_days = var.recovery_window_days
+
+  tags = var.tags
+}
+
+resource "aws_secretsmanager_secret_version" "ai_gateway" {
+  count = var.create_ai_gateway_secrets ? 1 : 0
+
+  secret_id = aws_secretsmanager_secret.ai_gateway[0].id
+  secret_string = jsonencode({
+    openai_api_key    = var.ai_gateway_secrets.openai_api_key
+    anthropic_api_key = var.ai_gateway_secrets.anthropic_api_key
+    gemini_api_key    = var.ai_gateway_secrets.gemini_api_key
+    helicone_api_key  = var.ai_gateway_secrets.helicone_api_key
+  })
+
   lifecycle {
     ignore_changes = [secret_string]
   }
@@ -116,144 +104,151 @@ resource "aws_secretsmanager_secret_version" "auth" {
 
 # ClickHouse secrets
 resource "aws_secretsmanager_secret" "clickhouse" {
-  name        = "${var.secret_prefix}/clickhouse"
-  description = "ClickHouse database credentials"
-  
-  tags = merge(local.common_tags, {
-    Category = "clickhouse"
-  })
+  count = var.create_clickhouse_secrets ? 1 : 0
+
+  name                    = "${var.secret_prefix}/clickhouse"
+  description             = "Helicone ClickHouse credentials"
+  recovery_window_in_days = var.recovery_window_days
+
+  tags = var.tags
 }
 
 resource "aws_secretsmanager_secret_version" "clickhouse" {
-  secret_id = aws_secretsmanager_secret.clickhouse.id
+  count = var.create_clickhouse_secrets ? 1 : 0
+
+  secret_id = aws_secretsmanager_secret.clickhouse[0].id
   secret_string = jsonencode({
-    user     = var.clickhouse_user
-    password = var.clickhouse_password
+    user = var.clickhouse_secrets.user
   })
-  
+
   lifecycle {
     ignore_changes = [secret_string]
   }
 }
 
 #################################################################################
-# IAM Role for External Secrets Operator
-#################################################################################
-
-# IAM Policy for External Secrets Operator
-resource "aws_iam_policy" "external_secrets" {
-  name        = "${var.cluster_name}-external-secrets-policy"
-  description = "IAM policy for External Secrets Operator to access AWS Secrets Manager"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "secretsmanager:GetSecretValue",
-          "secretsmanager:DescribeSecret"
-        ]
-        Resource = [
-          aws_secretsmanager_secret.database.arn,
-          aws_secretsmanager_secret.api_keys.arn,
-          aws_secretsmanager_secret.storage.arn,
-          aws_secretsmanager_secret.auth.arn,
-          aws_secretsmanager_secret.clickhouse.arn,
-          "${aws_secretsmanager_secret.database.arn}:*",
-          "${aws_secretsmanager_secret.api_keys.arn}:*",
-          "${aws_secretsmanager_secret.storage.arn}:*",
-          "${aws_secretsmanager_secret.auth.arn}:*",
-          "${aws_secretsmanager_secret.clickhouse.arn}:*"
-        ]
-      }
-    ]
-  })
-
-  tags = local.common_tags
-}
-
 # IAM Role for External Secrets Operator (IRSA)
+#################################################################################
+
+# Trust policy for External Secrets Operator service account
+data "aws_iam_policy_document" "external_secrets_trust" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Federated"
+      identifiers = ["arn:${local.partition}:iam::${local.account_id}:oidc-provider/${var.eks_oidc_provider}"]
+    }
+
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "${var.eks_oidc_provider}:sub"
+      values   = ["system:serviceaccount:external-secrets:external-secrets"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${var.eks_oidc_provider}:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+  }
+}
+
+# IAM role for External Secrets Operator
 resource "aws_iam_role" "external_secrets" {
-  name = "${var.cluster_name}-external-secrets-role"
+  name               = "${var.resource_prefix}-external-secrets-role"
+  assume_role_policy = data.aws_iam_policy_document.external_secrets_trust.json
+  description        = "IAM role for External Secrets Operator to access AWS Secrets Manager"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Federated = var.oidc_provider_arn
-        }
-        Action = "sts:AssumeRoleWithWebIdentity"
-        Condition = {
-          StringEquals = {
-            "${replace(var.oidc_provider_arn, "/^(.*provider/)/", "")}:sub" = "system:serviceaccount:${var.external_secrets_namespace}:${var.external_secrets_service_account}"
-            "${replace(var.oidc_provider_arn, "/^(.*provider/)/", "")}:aud" = "sts.amazonaws.com"
-          }
-        }
-      }
-    ]
-  })
-
-  tags = merge(local.common_tags, {
-    Name = "${var.cluster_name}-external-secrets-role"
-  })
+  tags = var.tags
 }
 
-# Attach policy to role
-resource "aws_iam_role_policy_attachment" "external_secrets" {
-  policy_arn = aws_iam_policy.external_secrets.arn
-  role       = aws_iam_role.external_secrets.name
+# IAM policy for External Secrets Operator
+data "aws_iam_policy_document" "external_secrets_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "secretsmanager:GetResourcePolicy",
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:DescribeSecret",
+      "secretsmanager:ListSecretVersionIds"
+    ]
+    resources = [
+      aws_secretsmanager_secret.database.arn,
+      aws_secretsmanager_secret.storage.arn,
+      aws_secretsmanager_secret.web.arn,
+    ]
+  }
+
+  # Optional AI Gateway secrets
+  dynamic "statement" {
+    for_each = var.create_ai_gateway_secrets ? [1] : []
+    content {
+      effect = "Allow"
+      actions = [
+        "secretsmanager:GetResourcePolicy",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:ListSecretVersionIds"
+      ]
+      resources = [
+        aws_secretsmanager_secret.ai_gateway[0].arn
+      ]
+    }
+  }
+
+  # Optional ClickHouse secrets  
+  dynamic "statement" {
+    for_each = var.create_clickhouse_secrets ? [1] : []
+    content {
+      effect = "Allow"
+      actions = [
+        "secretsmanager:GetResourcePolicy",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:ListSecretVersionIds"
+      ]
+      resources = [
+        aws_secretsmanager_secret.clickhouse[0].arn
+      ]
+    }
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "secretsmanager:ListSecrets"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "external_secrets" {
+  name   = "${var.resource_prefix}-external-secrets-policy"
+  role   = aws_iam_role.external_secrets.id
+  policy = data.aws_iam_policy_document.external_secrets_policy.json
 }
 
 #################################################################################
-# KMS Key for Secrets Manager (Optional)
+# Optional KMS Key for Secret Encryption
 #################################################################################
 
-resource "aws_kms_key" "secrets_manager" {
-  count                   = var.create_kms_key ? 1 : 0
-  description             = "KMS key for External Secrets Manager encryption"
-  deletion_window_in_days = var.kms_key_deletion_window
-  enable_key_rotation     = true
+resource "aws_kms_key" "secrets" {
+  count = var.create_kms_key ? 1 : 0
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "Enable IAM User Permissions"
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        }
-        Action   = "kms:*"
-        Resource = "*"
-      },
-      {
-        Sid    = "Allow External Secrets Operator"
-        Effect = "Allow"
-        Principal = {
-          AWS = aws_iam_role.external_secrets.arn
-        }
-        Action = [
-          "kms:Decrypt",
-          "kms:DescribeKey"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
+  description              = "KMS key for Helicone secrets encryption"
+  key_usage                = "ENCRYPT_DECRYPT"
+  customer_master_key_spec = "SYMMETRIC_DEFAULT"
+  deletion_window_in_days  = var.kms_deletion_window_days
 
-  tags = merge(local.common_tags, {
-    Name = "${var.cluster_name}-secrets-manager-key"
-  })
+  tags = var.tags
 }
 
-resource "aws_kms_alias" "secrets_manager" {
-  count         = var.create_kms_key ? 1 : 0
-  name          = "alias/${var.cluster_name}-secrets-manager"
-  target_key_id = aws_kms_key.secrets_manager[0].key_id
-}
+resource "aws_kms_alias" "secrets" {
+  count = var.create_kms_key ? 1 : 0
 
-# Data source for current AWS caller identity
-data "aws_caller_identity" "current" {} 
+  name          = "alias/${var.resource_prefix}-secrets"
+  target_key_id = aws_kms_key.secrets[0].key_id
+} 

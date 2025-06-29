@@ -1,44 +1,71 @@
+#################################################################################
+# General Configuration
+#################################################################################
+
 variable "region" {
-  description = "AWS region for the resources"
+  description = "AWS region where resources will be created"
   type        = string
-  default     = "us-west-2"
+
+  validation {
+    condition     = can(regex("^[a-z0-9-]+$", var.region))
+    error_message = "AWS region must be a valid region identifier."
+  }
 }
 
-variable "cluster_name" {
-  description = "Name of the EKS cluster"
+variable "resource_prefix" {
+  description = "Prefix for AWS resource names"
   type        = string
-}
+  default     = "helicone"
 
-variable "oidc_provider_arn" {
-  description = "ARN of the OIDC provider for the EKS cluster"
-  type        = string
+  validation {
+    condition     = can(regex("^[a-z0-9-]+$", var.resource_prefix))
+    error_message = "Resource prefix must contain only lowercase letters, numbers, and hyphens."
+  }
 }
 
 variable "secret_prefix" {
-  description = "Prefix for AWS Secrets Manager secret names"
+  description = "Prefix for secret names in AWS Secrets Manager"
   type        = string
   default     = "helicone"
-}
 
-variable "external_secrets_namespace" {
-  description = "Kubernetes namespace for External Secrets Operator"
-  type        = string
-  default     = "external-secrets-system"
-}
-
-variable "external_secrets_service_account" {
-  description = "Service account name for External Secrets Operator"
-  type        = string
-  default     = "external-secrets"
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9/_+=.@-]+$", var.secret_prefix))
+    error_message = "Secret prefix must contain only valid AWS Secrets Manager characters."
+  }
 }
 
 variable "tags" {
-  description = "Common tags to apply to all resources"
+  description = "Tags to apply to all resources"
   type        = map(string)
   default = {
+    Project     = "Helicone"
     Environment = "production"
-    Project     = "helicone"
-    ManagedBy   = "terraform"
+    ManagedBy   = "Terraform"
+  }
+}
+
+variable "recovery_window_days" {
+  description = "Number of days AWS Secrets Manager waits before deleting a secret"
+  type        = number
+  default     = 7
+
+  validation {
+    condition     = var.recovery_window_days >= 7 && var.recovery_window_days <= 30
+    error_message = "Recovery window must be between 7 and 30 days."
+  }
+}
+
+#################################################################################
+# EKS Configuration
+#################################################################################
+
+variable "eks_oidc_provider" {
+  description = "EKS OIDC provider URL (without https://)"
+  type        = string
+
+  validation {
+    condition     = can(regex("^oidc\\.eks\\.", var.eks_oidc_provider))
+    error_message = "EKS OIDC provider must be a valid EKS OIDC provider URL."
   }
 }
 
@@ -46,106 +73,97 @@ variable "tags" {
 # Secret Values
 #################################################################################
 
-# Database secrets
-variable "database_username" {
-  description = "Database username"
-  type        = string
-  default     = "postgres"
-  sensitive   = true
+variable "database_secrets" {
+  description = "Database secret values"
+  type = object({
+    postgres_password = string
+  })
+  sensitive = true
+
+  validation {
+    condition     = length(var.database_secrets.postgres_password) >= 8
+    error_message = "PostgreSQL password must be at least 8 characters long."
+  }
 }
 
-variable "database_password" {
-  description = "Database password"
-  type        = string
-  sensitive   = true
+variable "storage_secrets" {
+  description = "Storage secret values (S3/MinIO)"
+  type = object({
+    access_key          = string
+    secret_key          = string
+    minio_root_user     = string
+    minio_root_password = string
+  })
+  sensitive = true
+
+  validation {
+    condition     = length(var.storage_secrets.access_key) > 0
+    error_message = "Storage access key cannot be empty."
+  }
+
+  validation {
+    condition     = length(var.storage_secrets.secret_key) > 0
+    error_message = "Storage secret key cannot be empty."
+  }
+
+  validation {
+    condition     = length(var.storage_secrets.minio_root_password) >= 8
+    error_message = "MinIO root password must be at least 8 characters long."
+  }
 }
 
-# API Keys
-variable "openai_api_key" {
-  description = "OpenAI API key"
-  type        = string
-  default     = ""
-  sensitive   = true
+variable "web_secrets" {
+  description = "Web application secret values"
+  type = object({
+    better_auth_secret = string
+    stripe_secret_key  = string
+  })
+  sensitive = true
+
+  validation {
+    condition     = length(var.web_secrets.better_auth_secret) >= 32
+    error_message = "Better Auth secret must be at least 32 characters long."
+  }
 }
 
-variable "anthropic_api_key" {
-  description = "Anthropic API key"
-  type        = string
-  default     = ""
-  sensitive   = true
+variable "create_ai_gateway_secrets" {
+  description = "Whether to create AI Gateway secrets in AWS Secrets Manager"
+  type        = bool
+  default     = true
 }
 
-variable "gemini_api_key" {
-  description = "Google Gemini API key"
-  type        = string
-  default     = ""
-  sensitive   = true
+variable "ai_gateway_secrets" {
+  description = "AI Gateway API key values"
+  type = object({
+    openai_api_key    = string
+    anthropic_api_key = string
+    gemini_api_key    = string
+    helicone_api_key  = string
+  })
+  default = {
+    openai_api_key    = ""
+    anthropic_api_key = ""
+    gemini_api_key    = ""
+    helicone_api_key  = ""
+  }
+  sensitive = true
 }
 
-variable "helicone_api_key" {
-  description = "Helicone API key"
-  type        = string
-  default     = ""
-  sensitive   = true
+variable "create_clickhouse_secrets" {
+  description = "Whether to create ClickHouse secrets in AWS Secrets Manager"
+  type        = bool
+  default     = true
 }
 
-# Storage credentials
-variable "s3_access_key" {
-  description = "S3 access key"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "s3_secret_key" {
-  description = "S3 secret key"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "minio_root_user" {
-  description = "MinIO root user"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "minio_root_password" {
-  description = "MinIO root password"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-# Authentication secrets
-variable "better_auth_secret" {
-  description = "Better Auth secret key"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "stripe_secret_key" {
-  description = "Stripe secret key"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-# ClickHouse secrets
-variable "clickhouse_user" {
-  description = "ClickHouse user"
-  type        = string
-  default     = "default"
-  sensitive   = true
-}
-
-variable "clickhouse_password" {
-  description = "ClickHouse password"
-  type        = string
-  default     = ""
-  sensitive   = true
+variable "clickhouse_secrets" {
+  description = "ClickHouse secret values"
+  type = object({
+    user = string
+  })
+  default = {
+    user = "default"
+  }
+  sensitive = true
 }
 
 #################################################################################
@@ -153,13 +171,18 @@ variable "clickhouse_password" {
 #################################################################################
 
 variable "create_kms_key" {
-  description = "Whether to create a KMS key for Secrets Manager encryption"
+  description = "Whether to create a KMS key for secret encryption"
   type        = bool
-  default     = true
+  default     = false
 }
 
-variable "kms_key_deletion_window" {
-  description = "KMS key deletion window in days"
+variable "kms_deletion_window_days" {
+  description = "Number of days to wait before deleting KMS key"
   type        = number
-  default     = 30
+  default     = 10
+
+  validation {
+    condition     = var.kms_deletion_window_days >= 7 && var.kms_deletion_window_days <= 30
+    error_message = "KMS deletion window must be between 7 and 30 days."
+  }
 } 
