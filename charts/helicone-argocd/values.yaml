@@ -23,7 +23,7 @@ argocd:
     path: charts/helicone-core
     helm:
       valueFiles:
-        - values.example.yaml
+        - values.yaml
       parameters: []
       # Example parameters:
       # - name: image.tag
