@@ -8,17 +8,13 @@ icon: https://helicone.ai/static/logo.png
 
 dependencies:
   - name: ai-gateway
-    version: "0.1.0"
+    version: "0.2.0"
     repository: "oci://registry-1.docker.io/helicone"
     condition: helicone.aiGateway.enabled
   - name: postgresql
     version: "15.5.20"
     repository: "https://charts.bitnami.com/bitnami"
     condition: postgresql.enabled
-  - name: external-secrets
-    version: "0.9.19"
-    repository: "https://charts.external-secrets.io"
-    condition: externalSecrets.enabled
 
 keywords:
   - helicone

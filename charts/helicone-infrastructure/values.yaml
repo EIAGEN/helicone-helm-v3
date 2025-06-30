@@ -27,13 +27,56 @@ sealedSecrets:
   keyRenewPeriod: "720h"
 
 # External Secrets Operator configuration
-externalSecrets:
-  enabled: false # Set to true to enable AWS Secrets Manager integration
+external-secrets:
+  enabled: true # Set to true to enable AWS Secrets Manager integration
+
+  # Configuration for the external-secrets subchart
+  installCRDs: true
+  replicaCount: 1
+
+  # Service account configuration for the operator
   serviceAccount:
     # IAM role ARN for IRSA (required for AWS Secrets Manager access)
     # Example: arn:aws:iam::123456789012:role/helicone-external-secrets-role
     # IMPORTANT: Set this when enabling External Secrets
     roleArn: ""
+    create: true
+    annotations: {}
+
+  # Resources for the external-secrets controller
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+  # Webhook configuration
+  webhook:
+    create: true
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+  # Cert controller configuration
+  certController:
+    create: true
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+# Legacy configuration for backward compatibility
+externalSecrets:
+  enabled: true
 
 # Cluster Autoscaler configuration
 clusterAutoscaler:
@@ -103,6 +146,38 @@ otelCollector:
         containerPort: 8888
         servicePort: 8888
         protocol: TCP
+
+  # Ingress configuration for OTEL endpoints
+  ingress:
+    enabled: false
+    className: "nginx"
+    annotations:
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+      nginx.ingress.kubernetes.io/proxy-body-size: "50m" # Increased for larger log payloads
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+      nginx.ingress.kubernetes.io/client-body-timeout: "300"
+      # Uncomment below for rate limiting if needed
+      # nginx.ingress.kubernetes.io/rate-limit: "100"
+      # nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    hosts:
+      - host: otel.helicone.ai
+        paths:
+          - path: /v1/logs
+            pathType: Prefix
+            port: 4318
+          - path: /v1/traces
+            pathType: Prefix
+            port: 4318
+          - path: /v1/metrics
+            pathType: Prefix
+            port: 4318
+    tls: []
+    # Uncomment and configure TLS for production:
+    # tls:
+    #   - secretName: otel-logs-tls
+    #     hosts:
+    #       - otel-logs.yourdomain.com
 
   # Configuration for the OTEL Collector
   config:

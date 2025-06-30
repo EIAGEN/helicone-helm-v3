@@ -355,7 +355,6 @@ mailhog:
 # Beyla configuration (disabled in core, managed by infrastructure chart)
 beyla:
   enabled: false
-
 #################################################################################
 # Sealed Secrets Configuration
 #################################################################################
@@ -369,35 +368,3 @@ beyla:
 #
 # The SealedSecret resources will automatically create the required Kubernetes Secrets
 # that the application components reference.
-
-#################################################################################
-# External Secrets Configuration (Optional AWS Integration)
-#################################################################################
-
-# Advanced: External Secrets Operator integration with AWS Secrets Manager
-# This allows automatic syncing from AWS Secrets Manager to SealedSecrets via CI/CD
-externalSecrets:
-  # Enable External Secrets Operator integration
-  # When enabled, secrets will be synchronized from AWS Secrets Manager
-  # When disabled, you'll manage SealedSecrets manually
-  enabled: true
-
-  # AWS configuration
-  aws:
-    region: "us-west-2"
-
-  # Secret prefix in AWS Secrets Manager
-  # Secrets will be named: {secretPrefix}/database, {secretPrefix}/storage, etc.
-  secretPrefix: "helicone"
-
-  # How often to refresh secrets from AWS Secrets Manager
-  refreshInterval: "1h"
-
-  # Service account configuration for External Secrets Operator
-  # This service account should be annotated with the IAM role ARN
-  # created by the external-secrets Terraform module
-  serviceAccount:
-    name: "external-secrets"
-    # Example annotation (set this to your actual IAM role ARN):
-    # annotations:
-    #   eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/helicone-external-secrets-role"

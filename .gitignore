@@ -18,5 +18,8 @@ override.tf.json
 
 # Helm values files
 values.yaml
+!charts/helicone-argocd/values.yaml
+!charts/helicone-core/values.yaml
+!charts/helicone-infrastructure/values.yaml
 values.filevine.yaml
 .hcstate

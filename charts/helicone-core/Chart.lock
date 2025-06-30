@@ -1,12 +1,9 @@
 dependencies:
 - name: ai-gateway
   repository: oci://registry-1.docker.io/helicone
-  version: 0.1.0
+  version: 0.2.0
 - name: postgresql
   repository: https://charts.bitnami.com/bitnami
   version: 15.5.20
-- name: external-secrets
-  repository: https://charts.external-secrets.io
-  version: 0.9.19
-digest: sha256:8f604686cac5c5c0951e4037a95fe54584ad99255baa1763fc0d3253f1e641c0
-generated: "2025-06-29T21:07:28.058674-07:00"
+digest: sha256:49c03d152c8e05c0b93846df7ab10ca0d30b2553b25dc644c32db97d372d5ede
+generated: "2025-06-29T21:47:38.443299-07:00"
