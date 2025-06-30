@@ -21,5 +21,6 @@ values.yaml
 !charts/helicone-argocd/values.yaml
 !charts/helicone-core/values.yaml
 !charts/helicone-infrastructure/values.yaml
+!charts/helicone-ai-gateway/values.yaml
 values.filevine.yaml
 .hcstate
