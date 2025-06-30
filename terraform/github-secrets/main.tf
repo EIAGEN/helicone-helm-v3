@@ -125,30 +125,26 @@ data "aws_iam_policy_document" "github_actions_secrets_sync_policy" {
     resources = ["*"]
   }
 
-  # EKS permissions for kubeseal
+  # EKS permissions for kubeseal and cluster access
   statement {
     effect = "Allow"
     actions = [
       "eks:DescribeCluster",
-      "eks:ListClusters"
+      "eks:ListClusters",
+      "eks:AccessKubernetesApi"
     ]
     resources = [
       "arn:${local.partition}:eks:${var.aws_region}:${local.account_id}:cluster/${var.eks_cluster_name}"
     ]
   }
 
-  # Additional permissions for kubeseal (if using cluster-based sealing)
-  dynamic "statement" {
-    for_each = var.enable_kubeseal_cluster_access ? [1] : []
-    content {
-      effect = "Allow"
-      actions = [
-        "eks:AccessKubernetesApi"
-      ]
-      resources = [
-        "arn:${local.partition}:eks:${var.aws_region}:${local.account_id}:cluster/${var.eks_cluster_name}"
-      ]
-    }
+  # Additional IAM permissions for role assumption debugging
+  statement {
+    effect = "Allow"
+    actions = [
+      "sts:GetCallerIdentity"
+    ]
+    resources = ["*"]
   }
 }
 

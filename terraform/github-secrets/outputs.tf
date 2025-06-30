@@ -17,13 +17,13 @@ output "github_repository_secrets" {
 # IAM Resources Outputs
 #################################################################################
 
-output "github_actions_role_arn" {
-  description = "ARN of the IAM role for GitHub Actions"
+output "github_actions_secrets_sync_role_arn" {
+  description = "ARN of the IAM role for GitHub Actions secrets sync"
   value       = aws_iam_role.github_actions_secrets_sync.arn
 }
 
-output "github_actions_role_name" {
-  description = "Name of the IAM role for GitHub Actions"
+output "github_actions_secrets_sync_role_name" {
+  description = "Name of the IAM role for GitHub Actions secrets sync"
   value       = aws_iam_role.github_actions_secrets_sync.name
 }
 

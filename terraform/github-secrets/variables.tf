@@ -113,7 +113,7 @@ variable "kubernetes_namespace" {
 variable "enable_kubeseal_cluster_access" {
   description = "Enable cluster access for kubeseal operations (requires additional EKS permissions)"
   type        = bool
-  default     = false
+  default     = true
 }
 
 #################################################################################

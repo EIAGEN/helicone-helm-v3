@@ -218,4 +218,67 @@ data "kubernetes_service" "ingress_nginx" {
     aws_eks_cluster.eks_cluster,
     aws_eks_node_group.eks_nodes
   ]
+}
+
+# Get the AWS load balancer details for zone ID
+data "aws_lb" "ingress_nginx" {
+  count = length(try(data.kubernetes_service.ingress_nginx.status.0.load_balancer.0.ingress, [])) > 0 ? 1 : 0
+  
+  tags = {
+    "kubernetes.io/service-name" = "ingress-nginx/ingress-nginx-controller"
+  }
+  
+  depends_on = [
+    data.kubernetes_service.ingress_nginx
+  ]
+}
+
+#################################################################################
+# EKS aws-auth ConfigMap for additional role access
+#################################################################################
+
+# Manage aws-auth ConfigMap
+resource "kubernetes_config_map_v1" "aws_auth" {
+  count = var.manage_aws_auth ? 1 : 0
+
+  metadata {
+    name      = "aws-auth"
+    namespace = "kube-system"
+  }
+
+  data = {
+    mapRoles = yamlencode(concat(
+      # Node group role (required)
+      [{
+        rolearn  = aws_iam_role.eks_node_role.arn
+        username = "system:node:{{EC2PrivateDNSName}}"
+        groups   = ["system:bootstrappers", "system:nodes"]
+      }],
+      # Cluster autoscaler role (if enabled)
+      var.enable_cluster_autoscaler ? [{
+        rolearn  = aws_iam_role.cluster_autoscaler[0].arn
+        username = "cluster-autoscaler"
+        groups   = ["system:cluster-autoscaler"]
+      }] : [],
+      # EBS CSI driver role (if enabled)
+      var.enable_ebs_csi_driver ? [{
+        rolearn  = aws_iam_role.ebs_csi_driver[0].arn
+        username = "ebs-csi-controller-sa"
+        groups   = ["system:masters"]
+      }] : [],
+      # Additional external roles (for GitHub Actions, etc.)
+      var.additional_aws_auth_roles
+    ))
+    
+    mapUsers = yamlencode(var.additional_aws_auth_users)
+  }
+
+  lifecycle {
+    ignore_changes = [metadata[0].annotations, metadata[0].labels]
+  }
+
+  depends_on = [
+    aws_eks_cluster.eks_cluster,
+    aws_eks_node_group.eks_nodes
+  ]
 } 

@@ -165,4 +165,34 @@ variable "ebs_csi_driver_version" {
   default     = "v1.30.0-eksbuild.1"  # Latest stable version
 }
 
+#################################################################################
+# AWS Auth ConfigMap Configuration
+#################################################################################
+
+variable "manage_aws_auth" {
+  description = "Whether to manage the aws-auth ConfigMap via Terraform"
+  type        = bool
+  default     = true
+}
+
+variable "additional_aws_auth_roles" {
+  description = "Additional IAM roles to add to the aws-auth ConfigMap"
+  type = list(object({
+    rolearn  = string
+    username = string
+    groups   = list(string)
+  }))
+  default = []
+}
+
+variable "additional_aws_auth_users" {
+  description = "Additional IAM users to add to the aws-auth ConfigMap"
+  type = list(object({
+    userarn  = string
+    username = string
+    groups   = list(string)
+  }))
+  default = []
+}
+
  
