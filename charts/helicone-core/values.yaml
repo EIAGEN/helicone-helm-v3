@@ -355,6 +355,30 @@ mailhog:
 # Beyla configuration (disabled in core, managed by infrastructure chart)
 beyla:
   enabled: false
+
+#################################################################################
+# External Secrets Configuration
+#################################################################################
+
+# External Secrets Operator configuration for AWS Secrets Manager integration
+# When enabled, secrets will be pulled from AWS Secrets Manager instead of using SealedSecrets
+externalSecrets:
+  # Set to true to enable External Secrets Operator integration
+  enabled: false
+
+  # Refresh interval for secret synchronization
+  refreshInterval: "30s"
+
+  # AWS Secrets Manager configuration
+  aws:
+    region: "us-west-2"
+
+  # Service account for AWS authentication
+  serviceAccount:
+    name: "external-secrets-sa"
+
+  # Prefix for secret keys in AWS Secrets Manager
+  secretPrefix: "helicone"
 #################################################################################
 # Sealed Secrets Configuration
 #################################################################################
