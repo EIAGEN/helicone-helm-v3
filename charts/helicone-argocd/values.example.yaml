@@ -19,9 +19,11 @@ argocd:
   # Source repository configuration
   source:
     repoURL: "https://github.com/Helicone/helicone-helm-v3.git"
-    targetRevision: HEAD
+    targetRevision: main
     path: charts/helicone-core
     helm:
+      valueFiles:
+        - values.example.yaml
       parameters: []
       # Example parameters:
       # - name: image.tag
@@ -68,6 +70,7 @@ argo-cd:
   server:
     service:
       type: ClusterIP
+      servicePortHttp: 80
     ingress:
       enabled: true
       ingressClassName: nginx
@@ -79,8 +82,10 @@ argo-cd:
             - argocd.helicone.ai
       annotations:
         cert-manager.io/cluster-issuer: "letsencrypt-prod"
-        nginx.ingress.kubernetes.io/ssl-redirect: "true"
         nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+        nginx.ingress.kubernetes.io/server-snippet: |
+          grpc_read_timeout 300;
+          grpc_send_timeout 300;
 
   # Disable Dex for simplicity (use built-in admin user)
   dex:
@@ -89,4 +94,4 @@ argo-cd:
   # Configs
   configs:
     params:
-      server.insecure: false
+      server.insecure: true
