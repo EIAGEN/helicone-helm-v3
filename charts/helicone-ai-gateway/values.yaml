@@ -4,7 +4,7 @@ helicone:
     image:
       repository: helicone/ai-gateway
       pullPolicy: IfNotPresent
-      tag: "main"
+      tag: "sha-765b2b1"
     replicaCount: 2
 
     # Rolling Update Deployment Strategy
@@ -111,3 +111,16 @@ helicone:
           base-url: "https://bedrock.us-east-1.amazonaws.com"
       helicone:
         authentication: true
+
+    secrets:
+      # Set these values using kubectl create secret or your preferred secrets management
+      # kubectl create secret generic helicone-ai-gateway-secrets \
+      #   --from-literal=proxy_helicone_api_key="your-key-here" \
+      #   --from-literal=openai_api_key="your-key-here" \
+      #   --from-literal=anthropic_api_key="your-key-here" \
+      #   --from-literal=gemini_api_key="your-key-here" \
+      #   --from-literal=helicone_api_key="your-key-here"
+      aiGatewayOpenaiApiKey: ""
+      aiGatewayAnthropicApiKey: ""
+      aiGatewayGeminiApiKey: ""
+      aiGatewayHeliconeApiKey: ""
