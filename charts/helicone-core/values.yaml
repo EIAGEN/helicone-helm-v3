@@ -138,7 +138,7 @@ helicone:
     image:
       repository: helicone/ai-gateway
       pullPolicy: IfNotPresent
-      tag: "main"
+      tag: "sha-765b2b1"
     replicaCount: 1
     service:
       annotations: {}
