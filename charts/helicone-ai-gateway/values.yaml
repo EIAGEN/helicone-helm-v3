@@ -5,18 +5,18 @@ helicone:
       repository: helicone/ai-gateway
       pullPolicy: IfNotPresent
       tag: "main"
-    replicaCount: 1
-    
+    replicaCount: 2
+
     # Rolling Update Deployment Strategy
     strategy:
       type: RollingUpdate
       rollingUpdate:
         maxUnavailable: 25%
         maxSurge: 25%
-    
+
     # Progress deadline for deployments (in seconds)
     progressDeadlineSeconds: 600
-    
+
     service:
       annotations: {}
       type: ClusterIP
@@ -38,7 +38,7 @@ helicone:
       limits:
         cpu: 250m
         memory: 512Mi
-    
+
     # Health Probes Configuration
     livenessProbe:
       enabled: true
@@ -51,7 +51,7 @@ helicone:
       timeoutSeconds: 5
       failureThreshold: 3
       successThreshold: 1
-    
+
     readinessProbe:
       enabled: true
       httpGet:
@@ -63,7 +63,7 @@ helicone:
       timeoutSeconds: 3
       failureThreshold: 3
       successThreshold: 1
-    
+
     startupProbe:
       enabled: true
       httpGet:
@@ -75,7 +75,7 @@ helicone:
       timeoutSeconds: 5
       failureThreshold: 30
       successThreshold: 1
-    
+
     extraEnvVars:
       - name: AI_GATEWAY__SERVER__ADDRESS
         value: "0.0.0.0"
@@ -99,25 +99,15 @@ helicone:
       routers:
         default:
           load-balance:
-              chat:
-                strategy: latency
-                targets:
-                  - openai
-                  - anthropic
+            chat:
+              strategy: latency
+              targets:
+                - openai
+                - anthropic
+      providers:
+        ollama:
+          base-url: "http://ollama:11434"
+        bedrock:
+          base-url: "https://bedrock.us-east-1.amazonaws.com"
       helicone:
         authentication: true
-        observability: false
-
-    # API Keys (these should be set via secure secrets management)
-    secrets:
-      # Set these values using kubectl create secret or your preferred secrets management
-      # kubectl create secret generic helicone-ai-gateway-secrets \
-      #   --from-literal=proxy_helicone_api_key="your-key-here" \
-      #   --from-literal=openai_api_key="your-key-here" \
-      #   --from-literal=anthropic_api_key="your-key-here" \
-      #   --from-literal=gemini_api_key="your-key-here" \
-      #   --from-literal=helicone_api_key="your-key-here"
-      aiGatewayOpenaiApiKey: ""
-      aiGatewayAnthropicApiKey: ""
-      aiGatewayGeminiApiKey: ""
-      aiGatewayHeliconeApiKey: ""

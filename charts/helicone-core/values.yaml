@@ -191,7 +191,6 @@ helicone:
                 - anthropic
       helicone:
         authentication: true
-        observability: false
 
   clickhouse:
     enabled: true
