@@ -380,7 +380,7 @@ externalSecrets:
   # Enable External Secrets Operator integration
   # When enabled, secrets will be synchronized from AWS Secrets Manager
   # When disabled, you'll manage SealedSecrets manually
-  enabled: false
+  enabled: true
 
   # AWS configuration
   aws:
