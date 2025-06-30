@@ -5,5 +5,8 @@ dependencies:
 - name: postgresql
   repository: https://charts.bitnami.com/bitnami
   version: 15.5.20
-digest: sha256:310f6c3088afee5afd44d255c302146514ed365bcfd0eba37310514998e28d25
-generated: "2025-06-24T15:41:37.9224-07:00"
+- name: external-secrets
+  repository: https://charts.external-secrets.io
+  version: 0.9.19
+digest: sha256:8f604686cac5c5c0951e4037a95fe54584ad99255baa1763fc0d3253f1e641c0
+generated: "2025-06-29T21:07:28.058674-07:00"

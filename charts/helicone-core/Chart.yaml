@@ -15,6 +15,10 @@ dependencies:
     version: "15.5.20"
     repository: "https://charts.bitnami.com/bitnami"
     condition: postgresql.enabled
+  - name: external-secrets
+    version: "0.9.19"
+    repository: "https://charts.external-secrets.io"
+    condition: externalSecrets.enabled
 
 keywords:
   - helicone
