@@ -145,7 +145,7 @@ data "aws_iam_policy_document" "external_secrets_trust" {
     condition {
       test     = "StringEquals"
       variable = "${var.eks_oidc_provider}:sub"
-      values   = ["system:serviceaccount:external-secrets:external-secrets"]
+      values   = ["system:serviceaccount:helicone-infrastructure:helicone-infrastructure-external-secrets"]
     }
 
     condition {
