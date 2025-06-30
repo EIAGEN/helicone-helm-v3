@@ -26,44 +26,6 @@ aurora:
   # Password will be pulled from Kubernetes secret created from AWS Secrets Manager
 
 helicone:
-  # Required secrets configuration for template compatibility
-  # IMPORTANT: These are placeholder values for template compatibility
-  # Actual secrets are managed via SealedSecrets or External Secrets
-  secrets:
-    # Authentication & Auth secrets
-    betterAuthSecret: ""
-
-    # Payment processing
-    stripeSecretKey: ""
-
-    # Storage (S3/MinIO)
-    minioRootUser: ""
-    minioRootPassword: ""
-    s3AccessKey: ""
-    s3SecretKey: ""
-
-    # Database secrets
-    postgresPassword: ""
-
-    # ClickHouse secrets
-    clickhouseUser: "default"
-    clickhousePassword: ""
-
-    # External API keys (development defaults)
-    azureApiKey: ""
-    azureApiVersion: ""
-    azureDeploymentName: ""
-    azureBaseUrl: ""
-    openaiApiKey: ""
-
-    # Monitoring & observability
-    grafanaAdminPassword: "admin"
-
-    # Feature flags and configuration
-    enablePromptSecurity: "false"
-    enableCronJob: "true"
-
-  # Configuration values (not secrets)
   config:
     s3BucketName: "helm-request-response-storage"
     s3Endpoint: "http://helicone-core-minio:9000"
