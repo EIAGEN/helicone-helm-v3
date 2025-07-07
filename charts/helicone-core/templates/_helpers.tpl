@@ -242,7 +242,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 
 {{- define "helicone.env.smtpHost" -}}
 - name: SMTP_HOST
-  value: "helicone-mailhog"
+  value: "helicone-core-mailhog"
 {{- end }}
 
 # TODO Move these into the same template such that they can be grouped together (define and include).

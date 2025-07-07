@@ -14,7 +14,7 @@ global:
     primary:
       persistence:
         size: 5Gi
-        storageClass: "gp2-immediate"
+        storageClass: "premium-rwo"
 
 # - Aurora connection configuration
 aurora:
@@ -29,13 +29,17 @@ helicone:
   config:
     s3BucketName: "helm-request-response-storage"
     s3Endpoint: "http://helicone-core-minio:9000"
-
+    betterAuthTrustedOrigins: "https://helicone-web.infra-test-03.hp.ragdl.ai"
+    siteUrl: "https://helicone-web.infra-test-03.hp.ragdl.ai"
+    databaseUrl: "postgresql://postgres:your-super-secret-and-long-postgres-password@helicone-core-postgresql:5432/helicone_test?options=-c%20search_path%3Dpublic,extensions"
+    flywayUrl: "jdbc:postgresql://helicone-core-postgresql:5432/helicone_test?options=-c%20search_path%3Dpublic,extensions"
+    
   web:
     enabled: true
     image:
-      repository: 849596434884.dkr.ecr.us-east-2.amazonaws.com/helicone/web
+      repository: "helicone/web"
       pullPolicy: IfNotPresent
-      tag: "v2025-06-17"
+      tag: "v2025.06.05"
     replicaCount: 1
     service:
       annotations: {}
@@ -43,7 +47,7 @@ helicone:
       port: 3000
     extraEnvVars: []
     ingress:
-      enabled: true
+      enabled: false
       className: "nginx"
       annotations:
         cert-manager.io/cluster-issuer: "letsencrypt-prod"
@@ -71,7 +75,7 @@ helicone:
       minAvailable: 1
       maxUnavailable: null
     autoscaling:
-      enabled: true
+      enabled: false
       minReplicas: 2
       maxReplicas: 10
       targetCPUUtilizationPercentage: 80
@@ -87,9 +91,10 @@ helicone:
           periodSeconds: 15
     postgresMigrationRunner:
       image:
-        repository: 849596434884.dkr.ecr.us-east-2.amazonaws.com/helicone/migrations
+        repository: helicone/migrations
+
         pullPolicy: IfNotPresent
-        tag: "v2025-06-17"
+        tag: "v2025.06.05"
       resources: {}
 
     router:
@@ -173,7 +178,7 @@ helicone:
         memory: "1Gi"
         cpu: "500m"
     persistence:
-      storageClass: "gp2-immediate"
+      storageClass: "premium-rwo"
       size: 10Gi
 
   # TODO Make it such that the s3 access key and secret key are the same environment variable such that it is hot-swappable with S3
@@ -192,7 +197,7 @@ helicone:
       consolePort: 9001
     resources: {}
     persistence:
-      storageClass: "gp2-immediate"
+      storageClass: "premium-rwo"
       size: 20Gi
     ingress:
       enabled: false
@@ -209,9 +214,9 @@ helicone:
   jawn:
     enabled: true
     image:
-      repository: 849596434884.dkr.ecr.us-east-2.amazonaws.com/helicone/jawn
+      repository: helicone/jawn
       pullPolicy: IfNotPresent
-      tag: "v2025-06-17"
+      tag: "v2025.06.05"
     replicaCount: 1
     service:
       annotations: {}
@@ -220,7 +225,7 @@ helicone:
     extraEnvVars: []
     publicUrl: "https://filevine.helicone.ai/jawn"
     ingress:
-      enabled: true
+      enabled: false
       className: "nginx"
       annotations:
         nginx.ingress.kubernetes.io/rewrite-target: /$2
@@ -243,7 +248,7 @@ helicone:
         cpu: 250m
         memory: 512Mi
     autoscaling:
-      enabled: true
+      enabled: false
       minReplicas: 1
       maxReplicas: 10
       targetCPUUtilizationPercentage: 80
@@ -325,7 +330,7 @@ beyla:
 # When enabled, secrets will be pulled from AWS Secrets Manager instead of using SealedSecrets
 externalSecrets:
   # Set to true to enable External Secrets Operator integration
-  enabled: true
+  enabled: false
 
   # Refresh interval for secret synchronization
   refreshInterval: "30s"

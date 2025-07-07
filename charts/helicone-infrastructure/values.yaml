@@ -11,7 +11,7 @@ global:
 
 # Sealed Secrets Controller configuration
 sealedSecrets:
-  enabled: true
+  enabled: false
   fullnameOverride: "sealed-secrets-controller"
   namespace: "kube-system"
   image:
@@ -28,7 +28,7 @@ sealedSecrets:
 
 # External Secrets Operator configuration
 external-secrets:
-  enabled: true # Set to true to enable AWS Secrets Manager integration
+  enabled: false # Set to true to enable AWS Secrets Manager integration
 
   # Configuration for the external-secrets subchart
   installCRDs: true
@@ -237,6 +237,9 @@ otelCollector:
       logging:
         loglevel: debug
 
+      loki:
+        endpoint: "http://helicone-infrastructure-loki.helicone-infrastructure.svc:3100/loki/api/v1/push"
+
     service:
       pipelines:
         traces:
@@ -250,7 +253,7 @@ otelCollector:
         logs:
           receivers: [otlp]
           processors: [memory_limiter, resource, batch]
-          exporters: [logging]
+          exporters: [logging, loki]
 
 # Jaeger configuration
 jaeger:
@@ -431,7 +434,7 @@ monitoring:
 
 # Nginx Ingress Controller configuration
 nginxIngressController:
-  enabled: true
+  enabled: false
   namespace: helicone-infrastructure
 
   # Watch all namespaces for ingress resources

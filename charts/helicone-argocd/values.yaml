@@ -5,10 +5,10 @@
 # ArgoCD configuration
 argocd:
   # Enable ArgoCD resources
-  enabled: true
+  enabled: false
 
   # Create ArgoCD project
-  createProject: true
+  createProject: false
 
   # ArgoCD namespace
   namespace: helicone-argocd
@@ -53,7 +53,7 @@ argocd:
 # ArgoCD Helm chart dependency configuration
 # Set to false if ArgoCD already exists in the cluster
 argo-cd:
-  enabled: true
+  enabled: false
   # Add any ArgoCD chart specific values here
   # These will be passed to the ArgoCD Helm chart dependency
 
